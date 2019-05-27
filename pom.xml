@@ -56,24 +56,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.vaadin/vaadin-server -->
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-server</artifactId>
-            <version>8.8.2</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.vaadin/vaadin-client-compiled -->
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-client-compiled</artifactId>
-            <version>8.8.2</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.vaadin/vaadin-themes -->
-        <dependency>
-            <groupId>com.vaadin</groupId>
-            <artifactId>vaadin-themes</artifactId>
-            <version>8.8.2</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/com.vaadin/vaadin-spring-boot-starter -->
         <dependency>
             <groupId>com.vaadin</groupId>
