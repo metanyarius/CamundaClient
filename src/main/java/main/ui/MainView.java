@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @Route
 @PWA(name = "Camunda Test Project — Client", shortName = "Camunda Test Project")
 public class MainView extends VerticalLayout {
-    public MainView(@Autowired MessageBean bean) {
+    public MainView() {
         String taskUrl = "http://localhost:8080/rest/engine/default/task?processDefinitionKey=Process_1prwej3";
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<Task[]> responseEntity = restTemplate.getForEntity(taskUrl, Task[].class);
