@@ -8,7 +8,12 @@ import main.entities.Task;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.PWA;
+import main.entities.TaskCompleteResponse;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Route
@@ -16,17 +21,29 @@ import org.springframework.web.client.RestTemplate;
 public class MainView extends VerticalLayout {
     public MainView() {
         String taskUrl = "http://localhost:8080/rest/engine/default/task?processDefinitionKey=Process_1prwej3";
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Task[]> responseEntity = restTemplate.getForEntity(taskUrl, Task[].class);
+        String taskCompleteUrl = "http://localhost:8080/rest/engine/default/task/%s/complete";
+        RestTemplate restTemplateGet = new RestTemplate();
+        ResponseEntity<Task[]> responseEntity = restTemplateGet.getForEntity(taskUrl, Task[].class);
         Task[] tasks = responseEntity.getBody();
 
         Grid<Task> grid = new Grid<>(Task.class);
         grid.setItems(tasks);
         NativeButtonRenderer button = new NativeButtonRenderer<>("Complete", clickedItem -> {
             Task task = (Task) clickedItem;
-            String taskName = task.getName();
+            String fullRequest = String.format(taskCompleteUrl, task.getId());
+            String message = null;
 
-            Notification.show("Задача " + taskName + " помечена, как выполненная");
+            RestTemplate restTemplatePost = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            try {
+                TaskCompleteResponse response = restTemplatePost.postForObject(fullRequest, new HttpEntity<>(headers), TaskCompleteResponse.class);
+                message = "Задача " + task.getName() + " помечена, как выполненная";
+            } catch (HttpServerErrorException e) {
+                message = "Завершить задачу " + task.getName() + " не удалось";
+            }
+
+            Notification.show(message);
         });
         grid.addColumn(button);
 
