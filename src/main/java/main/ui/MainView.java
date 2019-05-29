@@ -1,5 +1,6 @@
 package main.ui;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.data.renderer.NativeButtonRenderer;
@@ -16,37 +17,51 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
+
 @Route
 @PWA(name = "Camunda Test Project — Client", shortName = "Camunda Test Project")
 public class MainView extends VerticalLayout {
-    public MainView() {
-        String taskUrl = "http://localhost:8080/rest/engine/default/task?processDefinitionKey=Process_1prwej3";
-        String taskCompleteUrl = "http://localhost:8080/rest/engine/default/task/%s/complete";
-        RestTemplate restTemplateGet = new RestTemplate();
-        ResponseEntity<Task[]> responseEntity = restTemplateGet.getForEntity(taskUrl, Task[].class);
-        Task[] tasks = responseEntity.getBody();
 
-        Grid<Task> grid = new Grid<>(Task.class);
+    public static UI currUI = null;
+
+    public static final String TASK_URL = "http://localhost:8080/rest/engine/default/task?processDefinitionKey=Process_1prwej3";
+    public static final String TASK_COMPLETE_URL = "http://localhost:8080/rest/engine/default/task/%s/complete";
+
+    public void loadTasks(Grid<Task> grid) {
+        ResponseEntity<Task[]> responseEntity = new RestTemplate().getForEntity(TASK_URL, Task[].class);
+        Task[] tasks = responseEntity.getBody();
         grid.setItems(tasks);
+    }
+
+    public TaskCompleteResponse completeTask(Task task) {
+        String fullRequest = String.format(TASK_COMPLETE_URL, task.getId());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Object> entity = new HttpEntity<>("{\"variables\":{}}", headers);
+        return new RestTemplate().postForObject(fullRequest, entity, TaskCompleteResponse.class);
+    }
+
+    public MainView() {
+        Grid<Task> grid = new Grid<>(Task.class);
+        loadTasks(grid);
         NativeButtonRenderer button = new NativeButtonRenderer<>("Complete", clickedItem -> {
             Task task = (Task) clickedItem;
-            String fullRequest = String.format(taskCompleteUrl, task.getId());
             String message = null;
-
-            RestTemplate restTemplatePost = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
             try {
-                TaskCompleteResponse response = restTemplatePost.postForObject(fullRequest, new HttpEntity<>(headers), TaskCompleteResponse.class);
+                completeTask(task);
                 message = "Задача " + task.getName() + " помечена, как выполненная";
+                grid.setItems(new ArrayList<>());
+                loadTasks(grid);
             } catch (HttpServerErrorException e) {
                 message = "Завершить задачу " + task.getName() + " не удалось";
+                e.printStackTrace();
             }
-
             Notification.show(message);
         });
         grid.addColumn(button);
-
         add(grid);
+        currUI = UI.getCurrent();
     }
+
 }
